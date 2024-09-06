@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "OnlineSubsystem.h"
 #include "GameFramework/Character.h"
+#include "Interfaces/OnlineSessionDelegates.h"
 #include "Logging/LogMacros.h"
 #include "MenuSystemCharacter.generated.h"
 
@@ -71,8 +72,16 @@ public:
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
-public:
 	// 온라인 세션 인터페이스에 대한 포인터
-	TSharedPtr<class IOnlineSession, ESPMode::ThreadSafe> OnlineSessionInterface;
+	IOnlineSessionPtr OnlineSessionInterface;
+
+protected:
+	UFUNCTION(BlueprintCallable) // 블루프린트에서 호출할 것임
+	void CreateGameSession();
+
+	void OnCreateSessionComplete(FName SessionName, bool bWasSuccessful); //대리자에 바인딩 될 콜백함수
+private:
+
+	FOnCreateSessionCompleteDelegate CreateSessionCompleteDelegate; //대리자
 };
 

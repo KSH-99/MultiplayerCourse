@@ -12,6 +12,7 @@
 #include "InputActionValue.h"
 #include "OnlineSubsystem.h"
 #include "Interfaces/OnlineSessionInterface.h"
+#include "OnlineSessionSettings.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -19,6 +20,7 @@ DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 // AMenuSystemCharacter
 
 AMenuSystemCharacter::AMenuSystemCharacter()
+:CreateSessionCompleteDelegate(FOnCreateSessionCompleteDelegate::CreateUObject(this, &ThisClass::OnCreateSessionComplete/*콜백 함수*/)) // 대리자
 {
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
@@ -62,7 +64,7 @@ AMenuSystemCharacter::AMenuSystemCharacter()
 
 		if(GEngine)
 		{
-			GEngine->AddOnScreenDebugMessage(
+			GEngine->AddOnScreenDebugMessage( // 스팀에 연동 되었는지 확인을 위한 디버그 메시지
 				-1,
 				15.f,
 				FColor::Blue,
@@ -76,6 +78,61 @@ void AMenuSystemCharacter::BeginPlay()
 {
 	// Call the base class  
 	Super::BeginPlay();
+}
+
+void AMenuSystemCharacter::CreateGameSession()
+{
+	// 1을 누르면 호출됨
+	if(!OnlineSessionInterface.IsValid()) //유효하지않으면
+	{
+		return; //반환
+	}
+
+	auto ExistingSession = OnlineSessionInterface->GetNamedSession(NAME_GameSession);
+	if(ExistingSession != nullptr)
+	{
+		OnlineSessionInterface->DestroySession(NAME_GameSession);
+	}
+
+	OnlineSessionInterface->AddOnCreateSessionCompleteDelegate_Handle(CreateSessionCompleteDelegate); // 대리자 목록에 추가
+	// 세션을 생성하면 이 대리자에게 바인딩된 콜백 함수(OnCreateSessionComplete)가 호출
+	
+	TSharedPtr<FOnlineSessionSettings> SessionSettings = MakeShareable(new FOnlineSessionSettings()); // 객체 생성
+	SessionSettings->bIsLANMatch = false; // LAN 연결 안함
+	SessionSettings->NumPublicConnections = 4; // 인원수 제한
+	SessionSettings->bAllowJoinInProgress = true; // 세션이 실행 중이면 참여 가능
+	SessionSettings->bAllowJoinViaPresence = true; // 플레이어 상태에 따라서 참여 가능
+	SessionSettings->bShouldAdvertise = true; // 세션을 공개할지 여부
+	SessionSettings->bUsesPresence = true; // 플레이어 상태를 알릴지 여부
+	const ULocalPlayer* LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController(); // 네트워크 아이디를 얻기위해 플레이어컨트롤러 얻기
+	OnlineSessionInterface->CreateSession(*LocalPlayer->GetPreferredUniqueNetId(), NAME_GameSession, *SessionSettings); // 고유 아이디, 세션 이름, 세션 객체
+}
+
+void AMenuSystemCharacter::OnCreateSessionComplete(FName SessionName, bool bWasSuccessful) // 콜백 함수
+{
+	if(bWasSuccessful)
+	{
+		if(GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage( 
+				-1,
+				15.f,
+				FColor::Blue,
+				FString::Printf(TEXT("Created session: %s"), *SessionName.ToString())
+			);
+		}
+	}else
+	{
+		if(GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage( 
+				-1,
+				15.f,
+				FColor::Red,
+				FString(TEXT("Falid to create session!"))
+			);
+		}
+	}
 }
 
 //////////////////////////////////////////////////////////////////////////
