@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "OnlineSessionSettings.h"
 #include "OnlineSubsystem.h"
 #include "GameFramework/Character.h"
 #include "Interfaces/OnlineSessionDelegates.h"
@@ -76,12 +77,18 @@ public:
 	IOnlineSessionPtr OnlineSessionInterface;
 
 protected:
-	UFUNCTION(BlueprintCallable) // 블루프린트에서 호출할 것임
+	UFUNCTION(BlueprintCallable) // 블루프린트에서 호출
 	void CreateGameSession();
-
-	void OnCreateSessionComplete(FName SessionName, bool bWasSuccessful); //대리자에 바인딩 될 콜백함수
+	UFUNCTION(BlueprintCallable) // 블루프린트에서 호출
+	void JoinGameSession();
+	
+	void OnCreateSessionComplete(FName SessionName, bool bWasSuccessful); //대리자에 바인딩 될 세션 생성 콜백함수
+	void OnFindSessionComplete(bool bWasSuccessful); //대리자에 바인딩 될 세션 탐색 콜백함수
+	
 private:
+	FOnCreateSessionCompleteDelegate CreateSessionCompleteDelegate; // 세션 생성 대리자
+	FOnFindSessionsCompleteDelegate FindSessionsCompleteDelegate; // 세션 탐색 대리자
 
-	FOnCreateSessionCompleteDelegate CreateSessionCompleteDelegate; //대리자
+	TSharedPtr<FOnlineSessionSearch> SessionSearch;
 };
 

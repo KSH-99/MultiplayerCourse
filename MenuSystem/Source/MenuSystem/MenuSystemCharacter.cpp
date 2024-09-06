@@ -13,14 +13,16 @@
 #include "OnlineSubsystem.h"
 #include "Interfaces/OnlineSessionInterface.h"
 #include "OnlineSessionSettings.h"
+#include "Online/OnlineSessionNames.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
 //////////////////////////////////////////////////////////////////////////
 // AMenuSystemCharacter
 
-AMenuSystemCharacter::AMenuSystemCharacter()
-:CreateSessionCompleteDelegate(FOnCreateSessionCompleteDelegate::CreateUObject(this, &ThisClass::OnCreateSessionComplete/*콜백 함수*/)) // 대리자
+AMenuSystemCharacter::AMenuSystemCharacter():
+CreateSessionCompleteDelegate(FOnCreateSessionCompleteDelegate::CreateUObject(this, &ThisClass::OnCreateSessionComplete)),
+FindSessionsCompleteDelegate(FOnFindSessionsCompleteDelegate::CreateUObject(this, &ThisClass::OnFindSessionComplete))
 {
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
@@ -98,17 +100,37 @@ void AMenuSystemCharacter::CreateGameSession()
 	// 세션을 생성하면 이 대리자에게 바인딩된 콜백 함수(OnCreateSessionComplete)가 호출
 	
 	TSharedPtr<FOnlineSessionSettings> SessionSettings = MakeShareable(new FOnlineSessionSettings()); // 객체 생성
-	SessionSettings->bIsLANMatch = false; // LAN 연결 안함
+	SessionSettings->bIsLANMatch = false; // LAN 연결 여부
 	SessionSettings->NumPublicConnections = 4; // 인원수 제한
 	SessionSettings->bAllowJoinInProgress = true; // 세션이 실행 중이면 참여 가능
 	SessionSettings->bAllowJoinViaPresence = true; // 플레이어 상태에 따라서 참여 가능
 	SessionSettings->bShouldAdvertise = true; // 세션을 공개할지 여부
 	SessionSettings->bUsesPresence = true; // 플레이어 상태를 알릴지 여부
+	SessionSettings->bUseLobbiesIfAvailable = true;
 	const ULocalPlayer* LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController(); // 네트워크 아이디를 얻기위해 플레이어컨트롤러 얻기
 	OnlineSessionInterface->CreateSession(*LocalPlayer->GetPreferredUniqueNetId(), NAME_GameSession, *SessionSettings); // 고유 아이디, 세션 이름, 세션 객체
 }
 
-void AMenuSystemCharacter::OnCreateSessionComplete(FName SessionName, bool bWasSuccessful) // 콜백 함수
+void AMenuSystemCharacter::JoinGameSession()
+{
+	// 게임 세션 탐색
+	if(!OnlineSessionInterface.IsValid())
+	{
+		return;
+	}
+
+	OnlineSessionInterface->AddOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegate);
+	
+	SessionSearch = MakeShareable(new FOnlineSessionSearch());
+	SessionSearch->MaxSearchResults = 10000; // 검색할 최대 세션 수
+	SessionSearch->bIsLanQuery = false; // LAN 검색 여부
+	SessionSearch->QuerySettings.Set(SEARCH_PRESENCE, true, EOnlineComparisonOp::Equals);
+
+	const ULocalPlayer* LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
+	OnlineSessionInterface->FindSessions(*LocalPlayer->GetPreferredUniqueNetId(), SessionSearch.ToSharedRef());
+}
+
+void AMenuSystemCharacter::OnCreateSessionComplete(FName SessionName, bool bWasSuccessful) // 세션 생성 콜백 함수
 {
 	if(bWasSuccessful)
 	{
@@ -130,6 +152,24 @@ void AMenuSystemCharacter::OnCreateSessionComplete(FName SessionName, bool bWasS
 				15.f,
 				FColor::Red,
 				FString(TEXT("Falid to create session!"))
+			);
+		}
+	}
+}
+
+void AMenuSystemCharacter::OnFindSessionComplete(bool bWasSuccessful)
+{
+	for (auto Result : SessionSearch->SearchResults)
+	{
+		FString Id = Result.GetSessionIdStr(); // 세션 아이디를 문자열로 줌
+		FString User = Result.Session.OwningUserName; // 유저 이름
+		if(GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage( 
+				-1,
+				15.f,
+				FColor::Cyan,
+				FString::Printf(TEXT("ID: %s, User: %s"), *Id, *User)
 			);
 		}
 	}
