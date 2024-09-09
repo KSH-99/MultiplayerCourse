@@ -7,6 +7,7 @@
 #include "OnlineSubsystem.h"
 #include "GameFramework/Character.h"
 #include "Interfaces/OnlineSessionDelegates.h"
+#include "Interfaces/OnlineSessionInterface.h"
 #include "Logging/LogMacros.h"
 #include "MenuSystemCharacter.generated.h"
 
@@ -84,11 +85,14 @@ protected:
 	
 	void OnCreateSessionComplete(FName SessionName, bool bWasSuccessful); //대리자에 바인딩 될 세션 생성 콜백함수
 	void OnFindSessionComplete(bool bWasSuccessful); //대리자에 바인딩 될 세션 탐색 콜백함수
+	void OnJoinSessionComplete(FName SessionName, EOnJoinSessionCompleteResult::Type Result);
 	
 private:
 	FOnCreateSessionCompleteDelegate CreateSessionCompleteDelegate; // 세션 생성 대리자
 	FOnFindSessionsCompleteDelegate FindSessionsCompleteDelegate; // 세션 탐색 대리자
 
 	TSharedPtr<FOnlineSessionSearch> SessionSearch;
+
+	FOnJoinSessionCompleteDelegate JoinSessionCompleteDelegate; // 세션 참가 대리자
 };
 
