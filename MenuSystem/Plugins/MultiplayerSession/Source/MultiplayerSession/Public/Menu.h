@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "Interfaces/OnlineSessionInterface.h"
 #include "Menu.generated.h"
 
 /**
@@ -25,6 +26,13 @@ protected:
 	// MultiplayerSessionSubsystem에서 커스텀 델리게이트에 대한 콜백들
 	UFUNCTION()
 	void OnCreateSession(bool bWasSuccessful);
+	void OnFindSessions(const TArray<FOnlineSessionSearchResult>& SessionResults, bool bWasSuccessful);
+	void OnJoinSession(EOnJoinSessionCompleteResult::Type Result);
+	UFUNCTION()
+	void OnDestroySession(bool bWasSuccessful);
+	UFUNCTION()
+	void OnStartSession(bool bWasSuccessful);
+	
 	
 private:
     UPROPERTY(meta = (BindWidget)) // 이것을 하면 변수이름과 에디터 내에 버튼(다른것들도 포함) 이름이 같아야함

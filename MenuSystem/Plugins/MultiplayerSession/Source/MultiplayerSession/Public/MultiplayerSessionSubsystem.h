@@ -9,6 +9,10 @@
 
 //Menu 클래스에서 콜백을 바인딩하기 위한 사용자 정의 델리게이트 선언
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMultiplayerOnCreateSessionComplete, bool, bWasSuccessful); //대리자 이름, 타입, 매개변수 순
+DECLARE_MULTICAST_DELEGATE_TwoParams(FMultiplayerOnFindSessionComplete, const TArray<FOnlineSessionSearchResult>& SessionResults, bool bWasSuccessful);
+DECLARE_MULTICAST_DELEGATE_OneParam(FMultiplayerOnJoinSessionComplete, EOnJoinSessionCompleteResult::Type Result);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMultiplayerOnDestroySessionComplete, bool, bWasSuccessful);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMultiplayerOnStartSessionComplete, bool, bWasSuccessful);
 
 /**
  * 
@@ -30,7 +34,10 @@ public:
 
 	// 콜백을 바인딩하기 위해 Menu 클래스에 대한 커스텀 델리게이트들
 	FMultiplayerOnCreateSessionComplete MultiplayerOnCreateSessionComplete;
-	
+	FMultiplayerOnFindSessionComplete MultiplayerOnFindSessionComplete;
+	FMultiplayerOnJoinSessionComplete MultiplayerOnJoinSessionComplete;
+	FMultiplayerOnDestroySessionComplete MultiplayerOnDestroySessionComplete;
+	FMultiplayerOnStartSessionComplete MultiplayerOnStartSessionComplete;
 protected:
 
 	 // 온라인 세션 인터페이스 대리자 목록에 추가할 대리자에 대한 콜백입니다.
@@ -44,6 +51,7 @@ protected:
 private:
 	IOnlineSessionPtr SessionInterface;
 	TSharedPtr<FOnlineSessionSettings> LastSessionSettings;
+	TSharedPtr<FOnlineSessionSearch> LastSessionSearch;
 	
 	// 온라인 세션 인터페이스 대리자 목록을 추가합니다.
 	// 멀티플레이어 세션 서브시스템 콜백을 여기에 바인딩합니다. 
