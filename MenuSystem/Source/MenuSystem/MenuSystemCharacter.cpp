@@ -65,15 +65,15 @@ JoinSessionCompleteDelegate(FOnJoinSessionCompleteDelegate::CreateUObject(this, 
 	{
 		OnlineSessionInterface = OnlineSubsystem->GetSessionInterface();
 
-		if(GEngine)
-		{
-			GEngine->AddOnScreenDebugMessage( // 스팀에 연동 되었는지 확인을 위한 디버그 메시지
-				-1,
-				15.f,
-				FColor::Blue,
-				FString::Printf(TEXT("Found subsystem %s"), *OnlineSubsystem->GetSubsystemName().ToString())
-			);
-		}
+		// if(GEngine)
+		// {
+		// 	GEngine->AddOnScreenDebugMessage( // 스팀에 연동 되었는지 확인을 위한 디버그 메시지
+		// 		-1,
+		// 		15.f,
+		// 		FColor::Blue,
+		// 		FString::Printf(TEXT("Found subsystem %s"), *OnlineSubsystem->GetSubsystemName().ToString())
+		// 	);
+		// }
 	}
 }
 
