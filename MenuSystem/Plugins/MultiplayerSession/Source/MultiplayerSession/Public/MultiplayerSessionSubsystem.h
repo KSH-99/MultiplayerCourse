@@ -69,4 +69,8 @@ private:
 	
 	FOnStartSessionCompleteDelegate StartSessionCompleteDelegate; //세션 시작 대리자
 	FDelegateHandle StartSessionCompleteDelegateHandle;
+
+	bool bCreateSessionOnDestroy{false};
+	int32 LastNumPublicConnections;
+	FString LastMatchType;
 };

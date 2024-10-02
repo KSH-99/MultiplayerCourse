@@ -93,6 +93,7 @@ void UMenu::OnCreateSession(bool bWasSuccessful)
 		{
 			GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, "failed to create Session");
 		}
+		HostButton->SetIsEnabled(true);
 	}
 }
 
@@ -112,6 +113,10 @@ void UMenu::OnFindSessions(const TArray<FOnlineSessionSearchResult>& SessionResu
 			MultiplayerSessionSubsystem->JoinSession(Result);
 			return; //유효한 결과를 얻으면 리턴
 		}
+	}
+	if(!bWasSuccessful || SessionResults.Num() == 0)
+	{
+		JoinButton->SetIsEnabled(true);
 	}
 }
 
@@ -133,20 +138,49 @@ void UMenu::OnJoinSession(EOnJoinSessionCompleteResult::Type Result)
 			}
 		}
 	}
+	if(Result != EOnJoinSessionCompleteResult::Success)
+	{
+		JoinButton->SetIsEnabled(true);
+	}
 }
 
 void UMenu::OnDestroySession(bool bWasSuccessful)
 {
-	
+	if(bWasSuccessful)
+	{
+		if(GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Blue, "Session Destroyed");
+		}
+	}else
+	{
+		if(GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Blue, "Session failed to Destroy");
+		}
+	}
 }
 
 void UMenu::OnStartSession(bool bWasSuccessful)
 {
-	
+	if(bWasSuccessful)
+	{
+		if(GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Blue, "Session Started");
+		}
+	}else
+	{
+		if(GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Blue, "Session failed to start");
+		}
+	}
 }
 
 void UMenu::HostButtonClicked()
 {
+	HostButton->SetIsEnabled(false);
 	if(MultiplayerSessionSubsystem)
 	{
 		MultiplayerSessionSubsystem->CreateSession(NumPublicConnections, MatchType);
@@ -155,6 +189,7 @@ void UMenu::HostButtonClicked()
 
 void UMenu::JoinButtonClicked()
 {
+	JoinButton->SetIsEnabled(false);
 	if(MultiplayerSessionSubsystem)
 	{
 		MultiplayerSessionSubsystem->FindSession(10000);
