@@ -3,7 +3,9 @@
 
 #include "BlasterCharacter.h"
 
+
 #include "Camera/CameraComponent.h"
+#include "Components/WidgetComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/InputSettings.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -23,6 +25,9 @@ ABlasterCharacter::ABlasterCharacter()
 
 	bUseControllerRotationYaw = false; // 캐릭터와 컨트롤러가 같이 회전할지말지
 	GetCharacterMovement()->bOrientRotationToMovement = true; // 이동방향으로 회전
+
+	OverHeadWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("OverHeadWidget"));
+	OverHeadWidget->SetupAttachment(RootComponent);
 }
 
 void ABlasterCharacter::BeginPlay()
